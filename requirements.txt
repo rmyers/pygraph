@@ -1,0 +1,3 @@
+graphql-core-next
+uvicorn
+starlette
