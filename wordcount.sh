@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cat *.md | wc -w
+wc -w `find . -name '*.md'`
