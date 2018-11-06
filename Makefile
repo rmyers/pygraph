@@ -1,8 +1,10 @@
 
 
 book:
-	gitbook build
-	cp -R _book/* ./docs
+	$(MAKE) -C docs book
+
+serve:
+	$(MAKE) -C docs serve
 
 words:
 	wc -w `find . -name '*.md'`
