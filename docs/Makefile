@@ -17,6 +17,7 @@ copy:
 clean:
 	rm -rf _book
 	rm -f *.html
+	rm -rf part1
 	rm -f search_index.json
 	rm -rf gitbook
 
