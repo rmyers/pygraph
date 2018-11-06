@@ -1,0 +1,729 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Chapter One · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="chaptertwo.html" />
+    
+    
+    <link rel="prev" href="./" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.2" data-path="chapterone.html">
+            
+                <a href="chapterone.html">
+            
+                    
+                    Chapter One
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="chaptertwo.html">
+            
+                <a href="chaptertwo.html">
+            
+                    
+                    Chapter Two
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="." >Chapter One</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="take-back-the-web">TAKE BACK THE WEB</h1>
+<p>Using GraphQL and Python to move your business logic out of the hands of your
+Javascript UI Clients and back to the server where they belong!</p>
+<p>We have all been there at one point, not many people can say they have been
+at a place for a number of years and only work on a system that never needs
+updates. In the frantic world of the modern web things move quickly and the
+tech that was hot last year is most likely not again. But so how do we continue
+to progress forward without a tremendous amount of work? If your site is anything
+like mine you didn&apos;t write it and it is probably not you first choice of
+tech. But you are at a total loss as to how to replicate the functionality
+in a new site for a project with 8 years of designs and 100&apos;s? of contributors.</p>
+<p>What if there was a better way that way is GraphQL (I&apos;ll explain more in detail
+later)</p>
+<p>With GraphQL you can query from multiple sources all with a well defined schema
+that not only gives you exactly the data you want but it gives it back to you
+in the same structure. Think about that for a minute (find clever thing here)</p>
+<p>People usually talk about the query part of GraphQL but the real power is the
+ability to have custom resolvers to return that data. So while in a REST only
+world you are constrained by the api team adding fields and properties in the
+results. You now have the power to intercept all your api calls and transforms
+them as you see fit. That could mean something as &apos;simple&apos; as automatically
+translating all the strings into a different language. Or checking a users
+permissions and showing them only the options they are allowed to even preform
+while not having to talk to a different team (cause code is better at communicating
+with people than people are able to talk to each other think about that for
+a minute or two)</p>
+<h2 id="nosql-vs-sql">NOSQL vs SQL?</h2>
+<p>Let&apos;s explore what I mean when I say REST is like NOSQL and GraphQL is like
+a SQL database. First a simple example lets say you have a NOSQL DB and you
+have related data you need to have. Typically what is done in this scenario
+is a term de-normalization which is the opposite of normalization. Say you
+have a NOSQL DB and you want to model a person object:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
+  <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;frank&quot;</span>,
+  <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;frank@tld.com&quot;</span>
+}
+</code></pre>
+<p>This is a pretty simple object and the resulting queries will be fast which
+is why you choose NOSQL in the first place. You didn&apos;t want to have to mess
+with creating a schema for this straight forward model why waste time doing
+boring stuff!</p>
+<p>Then your manager comes over and says frank needs some friends which are also
+person objects. Since there are no relations in a NOSQL database the easiest
+thing to do is to de-normalize the data for the friends. Basically embed all
+the details of your friends inside your object (which is easy to do since there
+is no schema YAY!):</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
+  <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;frank&quot;</span>,
+  <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;frank@tld.com&quot;</span>,
+  <span class="hljs-string">&quot;friends&quot;</span>: [
+    {
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;2&quot;</span>,
+      <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;jane&quot;</span>,
+      <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;jane@tld.com&quot;</span>
+    },
+    {
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;3&quot;</span>,
+      <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;john&quot;</span>,
+      <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;john@tld.com&quot;</span>
+    }
+  ]
+}
+</code></pre>
+<p>Now every request to your NOSQL database includes this extra info, not to
+mention you need to handle all the updates when a person updates the email
+address.</p>
+<p>What if I only need to get Frank&apos;s email address and I don&apos;t want all that
+extra info? What if I need the friends list, but I need their friends as well?
+Should we de-normalize the data even more? When do you stop?</p>
+<p>Now maybe there are better way to NOSQL to solve this issue, they
+are most likely hacks or you would need a masters degree in your database to
+to explain it to someone else.</p>
+<p>So now how does this look in SQL? Simple First we need to generate a schema
+for a person and create a friends table to map them.</p>
+<pre><code class="lang-SQL"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">IF</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> person (
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">INT</span> AUTO_INCREMENT,
+    <span class="hljs-keyword">name</span> <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    email <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    PRIMARY <span class="hljs-keyword">KEY</span> (<span class="hljs-keyword">id</span>)
+);
+
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-keyword">IF</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">EXISTS</span> friends
+(
+  person_id <span class="hljs-built_in">INT</span>,
+  friend_id <span class="hljs-built_in">INT</span>,
+  <span class="hljs-keyword">CONSTRAINT</span> friends_pk PRIMARY <span class="hljs-keyword">KEY</span> (person_id, friend_id),
+  <span class="hljs-keyword">CONSTRAINT</span> FK_person
+      FOREIGN <span class="hljs-keyword">KEY</span> (person_id) <span class="hljs-keyword">REFERENCES</span> person (person_id),
+  <span class="hljs-keyword">CONSTRAINT</span> FK_friend
+      FOREIGN <span class="hljs-keyword">KEY</span> (friend_id) <span class="hljs-keyword">REFERENCES</span> person (friend_id)
+);
+</code></pre>
+<p>Now this is a huge amount of setup and you may need to know what you are
+doing or use a fancy ORM like Django&apos;s to manage these tables yourself.</p>
+<p>Query for all the person&apos;s:</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> * <span class="hljs-keyword">FROM</span> person;
+1           frank       frank@tld.com
+2           jane        jane@tld.com
+3           john        john@tld.com
+</code></pre>
+<p>I want the user details and all the friends name?</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SELECT</span> p.<span class="hljs-keyword">name</span>, p.email <span class="hljs-keyword">FROM</span> person p
+  <span class="hljs-keyword">LEFT</span> <span class="hljs-keyword">JOIN</span> friends f <span class="hljs-keyword">on</span> p.<span class="hljs-keyword">id</span> = f.friend_id
+  <span class="hljs-keyword">WHERE</span> f.person_id = <span class="hljs-number">1</span>;
+jane        jane@tld.com
+john        john@tld.com
+</code></pre>
+<p>Now this is undoubtibly more work and more complicated to write. But it has
+the nice benefit of only returning the data I want and it is fast as the
+database can use indexes to resolve the data. The person table is the source
+of truth for all things about the person and the friends table maps a
+relation between them.</p>
+<p>Also all your developers who have a little bit of SQL knowledge can easily
+discover the relations themselves simply by asking the database what they are:</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">SHOW</span> <span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span>;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> person (
+    <span class="hljs-keyword">id</span> <span class="hljs-built_in">INT</span> AUTO_INCREMENT,
+    <span class="hljs-keyword">name</span> <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    email <span class="hljs-built_in">VARCHAR</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    PRIMARY <span class="hljs-keyword">KEY</span> (<span class="hljs-keyword">id</span>)
+);
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> friends
+(
+  person_id <span class="hljs-built_in">INT</span>,
+  friend_id <span class="hljs-built_in">INT</span>,
+  <span class="hljs-keyword">CONSTRAINT</span> friends_pk PRIMARY <span class="hljs-keyword">KEY</span> (person_id, friend_id),
+  <span class="hljs-keyword">CONSTRAINT</span> FK_person
+      FOREIGN <span class="hljs-keyword">KEY</span> (person_id) <span class="hljs-keyword">REFERENCES</span> person (person_id),
+  <span class="hljs-keyword">CONSTRAINT</span> FK_friend
+      FOREIGN <span class="hljs-keyword">KEY</span> (friend_id) <span class="hljs-keyword">REFERENCES</span> person (friend_id)
+);
+</code></pre>
+<p>Now I can make adhoc queries all day long until I get just the right mix of
+data to performance. There are plenty of tools to help you in this journey
+as well simply for the fact that your data is well defined, just like the
+computer likes it to be!</p>
+<h2 id="rest-vs-graphql">REST vs Graphql</h2>
+<p>So what does this have to do with graphql? Lets create a simple REST api for
+our person table. <em>I&apos;ll just assume you chose SQL because you are smart
+and a sensible reader!</em></p>
+<pre><code class="lang-python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PersonAPI</span>:</span>
+  <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get</span><span class="hljs-params">(self, person_id)</span>:</span>
+    results = db.cursor.exec(PERSON_QUERY, person_id)  <span class="hljs-comment"># you get the idea</span>
+    <span class="hljs-keyword">return</span> person_to_json(results)
+</code></pre>
+<p>And we wire this up to the framework of our choice and start using it:</p>
+<pre><code class="lang-json">Request:
+GET /api/v1/person
+
+Response:
+{
+  <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
+  <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;frank&quot;</span>,
+  <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;frank@tld.com&quot;</span>
+}
+</code></pre>
+<p>Now our person api maps directly to a single db query and everyone is happy
+simple easy to read and we are done. Not so fast says your manager, she wants
+you to add in the friends details too. Should we just provide links and make
+the UI fetch those as well?</p>
+<pre><code class="lang-json">Request:
+GET /api/v1/person
+
+Response:
+{
+  <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
+  <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;frank&quot;</span>,
+  <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;frank@tld.com&quot;</span>,
+  <span class="hljs-string">&quot;friends&quot;</span>: [
+    <span class="hljs-string">&quot;/api/v1/person/2&quot;</span>,
+    <span class="hljs-string">&quot;/api/v1/person/3&quot;</span>
+  ]
+}
+</code></pre>
+<p>It might work, and this is truly the <em>most</em> RESTful? way to do this. Ideally
+in the REST world there is one url/uri for everything and all HTTP verbs are
+used to manipulate them. Well, the world is not prefect and you will never
+win an award for your website/api being technically correct in everyway.
+You can only hope to keep your users happy with fancy new features.</p>
+<p>In order to not be that person, you need to be flexible. We can reduce the
+number of api calls we need to make simply by populating the data. Something
+like:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
+  <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;frank&quot;</span>,
+  <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;frank@tld.com&quot;</span>,
+  <span class="hljs-string">&quot;friends&quot;</span>: [
+    {
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;2&quot;</span>,
+      <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;jane&quot;</span>,
+      <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;jane@tld.com&quot;</span>
+    },
+    {
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;3&quot;</span>,
+      <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;john&quot;</span>,
+      <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;john@tld.com&quot;</span>
+    }
+  ]
+}
+</code></pre>
+<p><em>Hmm, this is starting to look familiar...</em></p>
+<p>But now every rest call is returning all that extra friend info even when
+you don&apos;t use any of it. Well you could easily add a query param to trigger
+when to add info or which to add maybe something like:</p>
+<pre><code class="lang-json">GET /api/v1/person/<span class="hljs-number">1</span>?include=friends,and,other,fields
+</code></pre>
+<p>While that works it is not obvious and can easily be missed in your documentation
+for your person endpoint. (You do document your apis correct?) The person who
+comes after you might not appriciate that. It is also hard to &apos;discover&apos; this
+as it follows no real convention each endpoint may or may not honor this type
+of query args. Not to mention <em>YOU</em> might not even be able to change the api
+in this way, if this api is from a 3rd party.</p>
+<p>What did we learn so far?</p>
+<p>YOUR DATA HAS RELATIONS! It is not discrete pieces of information that does
+not interact with anything.</p>
+<p>You might see a correlation with other articles claiming that you shouldn&apos;t
+be using an ORM to map to your SQL tables because of impedance mismatch.
+(insert link here)</p>
+<p>We need a protocol that takes these relations into account. This is where
+GraphQL comes in. GraphQL was developed by Facebook and released in 2015 to
+handle this problem in a more natural way. Sort of like sql maps really
+well to most of your use cases. It goes one step further though as it is not
+strictly tied to a single data source. It is agnostic to where or how you
+get your data, yet it still provides a uniform schema to query it.</p>
+<p>Lets start with our simple person type:</p>
+<pre><code class="lang-gql">type Person {
+  id Integer!  # The `
+  name String!
+  email String  #
+  friends [Person]
+}
+
+type Query {
+  getPerson(id: Integer): Person
+}
+</code></pre>
+<p>This <code>gql</code> schema defines a custom type and exposes a simple query to retrieve
+the person. The basic types that are defined are String, Integer, List, and
+Boolean. You can define your own types to extend the schema which is what we
+have done with the person type.</p>
+<p>The Query type is a special type that indicates an &apos;method&apos; you can call. The
+nice thing about the gql language is that it is fairly readable and machines
+love it because they can see the all the types of inputs and outputs. This
+allows for a whole set of tooling that REST can not compete with.</p>
+<p>First let&apos;s explore how we would use this, here is a example of using the
+query to return just a single person&apos;s details:</p>
+<p><strong>POST</strong> /graphql</p>
+<pre><code class="lang-gql">{
+  query getPerson(id: 1) {
+    name
+    email
+  }
+}
+</code></pre>
+<p>RESPONSE:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;frank&quot;</span>,
+    <span class="hljs-string">&quot;frank@tld.com&quot;</span>
+  }
+}
+</code></pre>
+<p>As you can see our request is a little verbose, but the response shape is the
+same as the request. It will become a little easier to see that if we add in
+the friend details:</p>
+<p><strong>POST</strong> /graphql</p>
+<pre><code class="lang-gql">{
+  getPerson(id: 1) {
+    name
+    email
+    friend {
+      name
+      email
+    }
+  }
+}
+</code></pre>
+<p>RESPONSE:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;getPerson&quot;</span>: {
+      <span class="hljs-string">&quot;frank&quot;</span>,
+      <span class="hljs-string">&quot;frank@tld.com&quot;</span>,
+      <span class="hljs-string">&quot;friends&quot;</span>: [
+        {
+          <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;jane&quot;</span>,
+          <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;jane@tld.com&quot;</span>
+        },
+        {
+          <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;john&quot;</span>,
+          <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;john@tld.com&quot;</span>
+        }
+      ]
+    }
+  }
+}
+</code></pre>
+<p>Perfect we now have a single query that is well documented (by the schema) and
+it gives us just the data we need or want. On the backend the graphql server
+does all the heavy lifting so we don&apos;t have to know where the data comes
+from, all we know as a consumer is the types and the shape of the data. Which
+is perfect for user interfaces. We want them to be simple and map to how our
+customers have dictated how our data is being consumed. This allows us to
+tweak our schema so that is benefits the UI how we want to use the api. Rather
+than the other way, the REST api dictating how we can write our UI.</p>
+<p>One of the ways this can become clear is taking advantage of graphql&apos;s strengths.
+The data can come from anywhere, graphql doesn&apos;t actually care. Imagine if your
+people data was stored in one data base, maybe an accounts service. Then imagine
+you have an entirely separate service to register friendships. With GraphQL
+you define the resolvers for your data and it is up to your imagination how
+to accomplish that. Maybe you are one of those unlucky types that has to
+interface with a soap endpoint? You just need to provide a method or function
+that does the actual call and connect that to the schema.</p>
+<p>What if we need to handle permissions for our application? Typically authorization
+and authentication is handled by a different service. The api you have written
+<em>should</em> check permissions for a given user and validate that they can do an
+action and return an error if they can not do it. But what if you don&apos;t want
+to be rude to users of your UI and show them a helpful message before they
+try to click a button? Maybe disable the button or hide it completely?</p>
+<p>Can we do this with GraphQL? Yes! What if certain people can create new users
+in our system but some can&apos;t. You might have to do a query for the user data
+and a call to your authorization service to see what permissions they have.
+On the UI this could get tricky really fast as the number of permissions and
+actions increases. But with GraphQL you can just add a custom type or field
+for it. Here is an example:</p>
+<pre><code class="lang-gql">type Permission {
+  actionType String!  # create/read/delete/admin
+  resource  String!   # users/posts/books/etc
+}
+
+type Person {
+  id Integer!
+  name String!
+  email String
+  friends [Person]
+  permissions [Permission]
+}
+
+type Query {
+  getPerson(id: Integer): Person
+  getPermissions(personId: String!) [Permission]
+}
+</code></pre>
+<p>Now when we query for our Person we can also get back the permissions they
+have or we can query for an individual Person&apos;s permissions. We can even have
+the best of both worlds and perform two queries for the price of one (it may
+actually be more expensive but we&apos;ll talk performance later):</p>
+<pre><code class="lang-gql">query {
+  getPerson(id: 1) {
+    name
+    permissions {
+      actionType
+      resource
+    }
+  }
+
+  getPermissions(personId: 1) {
+    actionType
+    resource
+  }
+}
+</code></pre>
+<p>RESPONSE:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;getPerson&quot;</span>: {
+      <span class="hljs-string">&quot;frank&quot;</span>,
+      <span class="hljs-string">&quot;permissions&quot;</span>: [
+        {
+          <span class="hljs-string">&quot;actionType&quot;</span>: <span class="hljs-string">&quot;create&quot;</span>,
+          <span class="hljs-string">&quot;resource&quot;</span>: <span class="hljs-string">&quot;person&quot;</span>
+        },
+        {
+          <span class="hljs-string">&quot;actionType&quot;</span>: <span class="hljs-string">&quot;delete&quot;</span>,
+          <span class="hljs-string">&quot;resource&quot;</span>: <span class="hljs-string">&quot;person&quot;</span>
+        }
+      ]
+    },
+    <span class="hljs-string">&quot;getPermissions&quot;</span>: [
+      {
+        <span class="hljs-string">&quot;actionType&quot;</span>: <span class="hljs-string">&quot;create&quot;</span>,
+        <span class="hljs-string">&quot;resource&quot;</span>: <span class="hljs-string">&quot;person&quot;</span>
+      },
+      {
+        <span class="hljs-string">&quot;actionType&quot;</span>: <span class="hljs-string">&quot;delete&quot;</span>,
+        <span class="hljs-string">&quot;resource&quot;</span>: <span class="hljs-string">&quot;person&quot;</span>
+      }
+    ]
+  }
+}
+</code></pre>
+<p>Maybe that is not that useful, we would still need to implement a ton of logic
+on the UI to handle these permissions. What if we do that work on the server?
+Let&apos;s we calculate the permissions and the actions that are allowed. Here is
+how this would look for our custom resolver that doesn&apos;t map directly to an
+api call:</p>
+<pre><code class="lang-python"><span class="hljs-keyword">from</span> collections <span class="hljs-keyword">import</span> namedtuple
+
+Action = namedtuple(<span class="hljs-string">&apos;Action&apos;</span>, <span class="hljs-string">&apos;permission, title, enabled, disabled_message&apos;</span>)
+
+ACTIONS = [
+  <span class="hljs-comment"># All actions are disabled by default</span>
+  Action(<span class="hljs-string">&apos;create&apos;</span>, <span class="hljs-string">&apos;Create Person&apos;</span>, <span class="hljs-keyword">False</span>, <span class="hljs-string">&apos;You may not create People&apos;</span>),
+  Action(<span class="hljs-string">&apos;delete&apos;</span>, <span class="hljs-string">&apos;Delete Person&apos;</span>, <span class="hljs-keyword">False</span>, <span class="hljs-string">&apos;You may not delete People&apos;</span>),
+  Action(<span class="hljs-string">&apos;view&apos;</span>, <span class="hljs-string">&apos;View Person&apos;</span>, <span class="hljs-keyword">False</span>, <span class="hljs-string">&apos;You may not view People&apos;</span>),
+]
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">resolve_actions</span><span class="hljs-params">(_source, request)</span>:</span>  <span class="hljs-comment"># _source is unused in this example</span>
+    user = request.context.user
+    permissions = get_permissions_for_user(user)  <span class="hljs-comment"># get permissions somehow</span>
+    actions = []
+    <span class="hljs-keyword">for</span> action <span class="hljs-keyword">in</span> ACTIONS:
+      <span class="hljs-keyword">if</span> action.permission <span class="hljs-keyword">in</span> permissions:
+        action.enabled = <span class="hljs-keyword">True</span>
+        actions.append(action)
+</code></pre>
+<p>Now the gql for our actions looks like:</p>
+<pre><code class="lang-gql">type Action {
+  title String!
+  enabled Boolean!
+  disabled_message String!
+}
+
+type Query {
+  getActions() [Action]  # Uses the logged in user so it does not take arguments
+}
+</code></pre>
+<p>Now the front end doesn&apos;t need to know anything about permissions it is all
+handled by the GraphQL server. This makes the UI code super easy to reason
+about, as it is just a view in your MVC. Remember MVC? Yeah Javascript has
+been slowing attempting to kill that methodology with your redux and state
+management. Why would you want your controller logic placed on your client
+side Javascript? Let look at how we can wire this up. Even if you know nothing
+about React or Javascript this should be fairly easy to follow:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> React <span class="hljs-keyword">from</span> <span class="hljs-string">&apos;react&apos;</span>;
+<span class="hljs-keyword">import</span> { Query } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;react-apollo&quot;</span>;
+
+<span class="hljs-keyword">const</span> GET_ACTIONS = <span class="hljs-string">`{
+  getActions() {
+    title
+    enabled
+    disabled_message
+  }
+}
+`</span>
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">const</span> ActionMenu = () =&gt; (
+  <span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">Query</span> <span class="hljs-attr">query</span>=<span class="hljs-string">{GET_ACTIONS}</span> &gt;</span>
+    {({ data }) =&gt; {
+      return (
+        <span class="hljs-tag">&lt;<span class="hljs-name">Menu</span>&gt;</span>
+          {data.getActions.map(item =&gt; (
+            <span class="hljs-tag">&lt;<span class="hljs-name">ActionButton</span>
+                <span class="hljs-attr">key</span>=<span class="hljs-string">{item.name}</span>
+                <span class="hljs-attr">tooltip</span>=<span class="hljs-string">{item.enabled</span> ? <span class="hljs-attr">item.disabled_message</span> <span class="hljs-attr">:</span> <span class="hljs-attr">null</span>}
+                <span class="hljs-attr">enabled</span>=<span class="hljs-string">{item.enabled}</span>&gt;</span>
+              {item.title}
+            <span class="hljs-tag">&lt;/<span class="hljs-name">ActionButton</span>&gt;</span>
+          ))}
+        <span class="hljs-tag">&lt;/<span class="hljs-name">Menu</span>&gt;</span>
+      );
+    }}
+  <span class="hljs-tag">&lt;/<span class="hljs-name">Query</span>&gt;</span></span>
+);
+</code></pre>
+<p>This is as complicated your UI code should get. Each component or widget should
+map to a GraphQL query and just display the results. They should not be concerned
+with the nitty gritty details of where the data comes from or what your business
+rules are to show or manipulate data. Continue reading as we cover all your
+use cases.</p>
+<p><a href="chapterone.html">Go to Chapter One: Quick Start</a></p>
+<p><a href="table.md">Table of Contents</a></p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: Introduction">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="chaptertwo.html" class="navigation navigation-next " aria-label="Next page: Chapter Two">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Chapter One","level":"1.2","depth":1,"next":{"title":"Chapter Two","level":"1.3","depth":1,"path":"chaptertwo.md","ref":"chaptertwo.md","articles":[]},"previous":{"title":"Introduction","level":"1.1","depth":1,"path":"README.md","ref":"README.md","articles":[]},"dir":"ltr"},"config":{"plugins":[],"root":"./docs","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"gitbook":"*"},"file":{"path":"chapterone.md","mtime":"2018-11-05T19:46:33.145Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-06T02:49:54.214Z"},"basePath":".","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="gitbook/gitbook.js"></script>
+    <script src="gitbook/theme.js"></script>
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
