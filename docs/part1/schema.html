@@ -57,6 +57,8 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
+    <link rel="next" href="customresolvers.html" />
+    
     
     <link rel="prev" href="./" />
     
@@ -153,6 +155,45 @@
             
         </li>
     
+        <li class="chapter " data-level="1.4.2" data-path="customresolvers.html">
+            
+                <a href="customresolvers.html">
+            
+                    
+                    Custom Resolvers
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="restdatasource.html">
+            
+                <a href="restdatasource.html">
+            
+                    
+                    REST Datasource
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="deepend.html">
+            
+                <a href="deepend.html">
+            
+                    
+                    Deep End
+            
+                </a>
+            
+
+            
+        </li>
+    
 
             </ul>
             
@@ -203,7 +244,255 @@
     
                                 <section class="normal markdown-section">
                                 
-                                
+                                <h1 id="schema-design">Schema Design</h1>
+<p>All GraphQL adventures start with the schema file you should be very familiar
+with it if you wish to be successful. First things first, you may be tempted
+to use a tool like <a href="https://graphene-python.org" target="_blank">Graphene</a> to model your
+schema. While this is &apos;ok&apos; you are going to be locked into a single
+implementation for your site. Maybe you are fine with this, I strongly encourage
+you to give the DSL a try. Some of the benefits you will get is the ability to
+store the schema files separate from your code in files named like
+<code>my_schema.graphql</code>.</p>
+<p>This offers your code editor to syntax highlight the files as well as allowing
+you to reuse the schema with other tools. Flexibility is key, and avoiding
+vendor lock-in is a win. If you decide that pygraph is not for you, there is
+less work to move to a different server or language entirely.</p>
+<p>The only drawback to using the shema files is that we need to manually wire
+up the resolvers to the schema. It is not hard, it is just tedious, which is
+where pygraph will help you out. With pygraph you just have to use our
+decorator on your resolver class or function like:</p>
+<pre><code class="lang-python"><span class="hljs-meta">@register.query</span>
+<span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">getPerson</span><span class="hljs-params">(_source, info, argA, argB)</span>:</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&apos;something cool&apos;</span>
+
+
+<span class="hljs-meta">@register.resource</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span><span class="hljs-params">(BaseAPIResource)</span>:</span>
+    base_url = <span class="hljs-string">&apos;/api/v1/person&apos;</span>
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">computed_value</span><span class="hljs-params">(self, source, info)</span>:</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-string">&apos;something else&apos;</span>
+</code></pre>
+<p>There is nothing magical about our decorator, and how we join them. We use
+the <a href="https://graphql-core-next.readthedocs.io/en/latest/" target="_blank">graphql-core-next</a> to
+parse the GQL schema and use a custom resolver to map resolvers to the schema.
+Here is a full working example of the process:</p>
+<pre><code class="lang-python"><span class="hljs-keyword">from</span> graphql <span class="hljs-keyword">import</span> build_schema, extend_schema, parse, graphql_sync
+
+<span class="hljs-comment"># This is the root query that we provide, since the Query type cannot be</span>
+<span class="hljs-comment"># completely empty we need to provide something that we can extend with</span>
+<span class="hljs-comment"># the schema you are extending.</span>
+ROOT_QUERY = <span class="hljs-string">&quot;&quot;&quot;
+  type Query {
+    _empty: String
+  }
+&quot;&quot;&quot;</span>
+
+<span class="hljs-comment"># This is an extended query which you would provide for a custom type.</span>
+<span class="hljs-comment"># By extending the types you can spread the schema across multiple files</span>
+<span class="hljs-comment"># for easier management. You can also have different endpoints only use</span>
+<span class="hljs-comment"># a subset of your schema if you break it up.</span>
+EXTENDED = <span class="hljs-string">&quot;&quot;&quot;
+  type User {
+    name: String
+    last: String
+  }
+  extend type Query {
+    hello(name: String): User
+  }
+&quot;&quot;&quot;</span>
+
+schema = build_schema(ROOT_QUERY)
+extended_schema = extend_schema(schema, parse(EXTENDED))  <span class="hljs-comment"># repeat as needed</span>
+
+sample_query = <span class="hljs-string">&quot;&quot;&quot;{
+  hello(name: &quot;frank&quot;) {
+    name
+    last
+  }
+}
+&quot;&quot;&quot;</span>
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, name)</span>:</span>
+        self.name = name
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hello</span><span class="hljs-params">(source, info, name)</span>:</span>
+    <span class="hljs-keyword">return</span> User(name)
+
+<span class="hljs-comment"># This is the registry</span>
+registry = {
+  <span class="hljs-string">&apos;Query&apos;</span>: {
+    <span class="hljs-string">&apos;hello&apos;</span>: hello,
+  },
+  <span class="hljs-string">&apos;User&apos;</span>: {
+    <span class="hljs-comment"># A custom resolver for fields that are not on our model</span>
+    <span class="hljs-string">&apos;last&apos;</span>: <span class="hljs-keyword">lambda</span> _source, _info, **kwargs: <span class="hljs-string">&apos;smith&apos;</span>
+  }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">resolver</span><span class="hljs-params">(resource, info, **kwargs)</span>:</span>
+    type_name = info.parent_type.name  <span class="hljs-comment"># GQL schema type (ie Query, User)</span>
+    field_name = info.field_name  <span class="hljs-comment"># The attribute being resolved (ie name, last)</span>
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-comment"># First check if there is a customer resolver in the registry</span>
+        <span class="hljs-comment"># (ie Query:hello, User:last)</span>
+        custom_resolver = registry[type_name][field_name]
+        <span class="hljs-keyword">return</span> custom_resolver(resource, info, **kwargs)
+    <span class="hljs-keyword">except</span> KeyError:
+        <span class="hljs-comment"># If there is not a custom resolver check the resource for attributes</span>
+        <span class="hljs-comment"># that match the field_name. The resource argument will be the result</span>
+        <span class="hljs-comment"># of the Query type resolution. In our example that is the result of</span>
+        <span class="hljs-comment"># the `hello` function which is an instance of the User class.</span>
+        <span class="hljs-keyword">return</span> getattr(resource, field_name, <span class="hljs-keyword">None</span>)
+
+
+results = graphql_sync(
+    extended_schema,
+    sample_query,
+    field_resolver=resolver
+)
+
+print(results)
+</code></pre>
+<p>If you copy that into a file and run it like <code>python myquery.py</code> you will see:</p>
+<pre><code>ExecutionResult(data={&apos;hello&apos;: {&apos;name&apos;: &apos;frank&apos;, &apos;last&apos;: &apos;smith&apos;}}, errors=None)
+</code></pre><p>Good schema designs should include only the information you know you are going
+to use. It is easy to add new fields yet it is usually hard to deprecate old
+ones.</p>
+<h2 id="scalar-types">Scalar Types</h2>
+<p>There are 5 main Scalar types that are provided by the GQL language. Those are</p>
+<ul>
+<li><em>Int</em>: Signed 32&#x2010;bit integer</li>
+<li><em>Float</em>: Signed double-precision floating-point value</li>
+<li><em>String</em>: UTF&#x2010;8 characters</li>
+<li><em>Boolean</em>: true/false</li>
+<li><em>ID</em>: A unique identifier, which is serialized to String</li>
+</ul>
+<p>These map to the Javascript types so they can serialize to JSON. A field can
+be either a single value or a list of types. Circular references are possible
+in the GQL language as well. And ordering does not matter, except if you are
+extending an existing type, they need to be defined before you extend them.</p>
+<h2 id="object-types">Object Types</h2>
+<p>You can extend the type system with your own custom object types. You have seen
+some of this already here is a refresher:</p>
+<pre><code class="lang-graphql">type User {
+  id: ID!
+  first: String
+  last: String
+  email: String
+  bestFriend: User  # Circular Reference!
+}
+</code></pre>
+<p>You can extend a type like to provide extra capabilities, this could be used
+to dynamically extend a type depending on the request user. Or you could
+extend all your types on a special admin only interface:</p>
+<pre><code class="lang-graphql">extend type User {
+  specialField: String
+}
+
+extend type Query {
+  getUserBySpecialField(special: String): User
+}
+</code></pre>
+<p>How you organize it is up to you, and it may take a bit of trial and error
+as you design your schema. By using the GQL schema you have the flexibility to
+choose how you want to expose your data in a easy to read format.</p>
+<h2 id="query-type">Query Type</h2>
+<p>This is a special type which maps to the GET http verb of a typical REST api.
+You can expose queries to return your custom object types. For example:</p>
+<pre><code class="lang-gql">type Query {
+  getUsers() [User]
+  getGroups() [Group]
+}
+</code></pre>
+<ul>
+<li><em>getUsers()</em>: Will return a list of User object types.</li>
+<li><em>getGroups()</em>: Will return a list of Group object types.</li>
+</ul>
+<h2 id="mutation-type">Mutation Type</h2>
+<p>Another special type is the Mutation which maps to POST/PUT/PATCH/DELETE verbs
+of a REST api. You define these similarly to the query type to expose all the
+possible actions you can take in your system.</p>
+<pre><code class="lang-gql">type Mutation {
+  createUser(name: String!, email: String!, birthday: String): User
+  createGroup(name: String!): Group
+}
+</code></pre>
+<ul>
+<li><em>createUser</em>: Has two required arguments and one optional one, and returns<pre><code>          new User object type that was created.
+</code></pre></li>
+<li><em>createGroup</em>: Has only one required argument, and returns a new Group object type.</li>
+</ul>
+<p>When you execute a mutation query you also can specify the fields to return just
+like the Query type:</p>
+<pre><code class="lang-gql">mutation {
+  createUser(name: &quot;Frank&quot;, email: &quot;frank@bean.co&quot;, birthday: &quot;monday&quot;) {
+    name
+    email
+  }
+}
+</code></pre>
+<p>Which will return the following response:</p>
+<pre><code class="lang-json">{
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;createUser&quot;</span>: {
+      <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;frank&quot;</span>,
+      <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;frank@bean.co&quot;</span>
+    }
+  }
+}
+</code></pre>
+<p>You can use these fields to update your cache on the client side. Or just
+display the new object for the user.</p>
+<h2 id="enum-type">Enum Type</h2>
+<p>You can define enums as a special type like:</p>
+<pre><code class="lang-gql">enum Permissions {
+  ADMIN
+  CREATE
+  DELETE
+  UPDATE
+}
+</code></pre>
+<p>Enums are particularly useful for when the user has only a few options to
+choose from. Also during development the GraphQL playground is able to
+auto-complete these fields for you.</p>
+<h2 id="custom-directives">Custom Directives</h2>
+<p>You can create custom directives which transform the data or markup the field
+for the resolvers to use. For example here is a custom directive for
+cacheControl:</p>
+<pre><code class="lang-gql">  enum CacheControlScope {
+    PUBLIC
+    PRIVATE
+  }
+  directive @cacheControl(
+    maxAge: Int
+    scope: CacheControlScope
+  ) on FIELD_DEFINITION | OBJECT | INTERFACE
+</code></pre>
+<p>This directive is to control the cache rules for a given object, field, or
+interface. This is built into pygraph which was inspired by one provided by
+<a href="link%20to%20apollo">apollo-server</a>. Depending on what fields you include in your
+query will adjust the maxAge of the cache for this object. As an example here
+is our User object type with cacheControl directives:</p>
+<pre><code class="lang-gql">type User @cacheControl(maxAge: 1800) {
+  id: ID!
+  first: String
+  last: String
+  email: String
+  bestFriend: User @cacheControl(maxAge: 60)
+}
+</code></pre>
+<p>In this example you can see that the default max age for the User object will
+be 1800 seconds. However if your query includes the <code>bestFriend</code> field the max
+age will be reduced to 60 seconds for that reponse object. This way you can
+optimize certain pages such as a quick list view to cache those responses for
+longer since the fields needed are fewer and update less frequently. Then on
+the full details page you would include more fields, and quite possibly
+fields that update more frequently so you can reduce the max age for the
+cached response.</p>
+
                                 
                                 </section>
                             
@@ -230,10 +519,14 @@
 
             
                 
-                <a href="./" class="navigation navigation-prev navigation-unique" aria-label="Previous page: Part One: Getting Started">
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: Part One: Getting Started">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
+                
+                <a href="customresolvers.html" class="navigation navigation-next " aria-label="Next page: Custom Resolvers">
+                    <i class="fa fa-angle-right"></i>
+                </a>
                 
             
         
@@ -242,7 +535,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Schema Design","level":"1.4.1","depth":2,"previous":{"title":"Part One: Getting Started","level":"1.4","depth":1,"path":"part1/README.md","ref":"part1/README.md","articles":[{"title":"Schema Design","level":"1.4.1","depth":2,"path":"part1/schema.md","ref":"part1/schema.md","articles":[]}]},"dir":"neutral"},"config":{"plugins":[],"root":"./_source","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"gitbook":"*"},"file":{"path":"part1/schema.md","mtime":"2018-11-06T18:19:02.875Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-06T18:23:10.838Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Schema Design","level":"1.4.1","depth":2,"next":{"title":"Custom Resolvers","level":"1.4.2","depth":2,"path":"part1/customresolvers.md","ref":"part1/customresolvers.md","articles":[]},"previous":{"title":"Part One: Getting Started","level":"1.4","depth":1,"path":"part1/README.md","ref":"part1/README.md","articles":[{"title":"Schema Design","level":"1.4.1","depth":2,"path":"part1/schema.md","ref":"part1/schema.md","articles":[]},{"title":"Custom Resolvers","level":"1.4.2","depth":2,"path":"part1/customresolvers.md","ref":"part1/customresolvers.md","articles":[]},{"title":"REST Datasource","level":"1.4.3","depth":2,"path":"part1/restdatasource.md","ref":"part1/restdatasource.md","articles":[]},{"title":"Deep End","level":"1.4.4","depth":2,"path":"part1/deepend.md","ref":"part1/deepend.md","articles":[]}]},"dir":"ltr"},"config":{"plugins":[],"root":"./_source","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"gitbook":"*"},"file":{"path":"part1/schema.md","mtime":"2018-11-07T03:03:37.767Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-07T03:25:54.120Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

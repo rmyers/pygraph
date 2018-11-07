@@ -115,7 +115,7 @@ class User:
         self.name = name
 
     def last(self, info, **args):
-        return "{'last': 'name'}"
+        return "hardcoded lastname"
 
 
 def hello(source, info, name):
