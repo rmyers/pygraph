@@ -1,0 +1,549 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Tutorial · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    
+    <link rel="prev" href="../part1/deepend.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../chapterone.html">
+            
+                <a href="../chapterone.html">
+            
+                    
+                    Chapter One
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../chaptertwo.html">
+            
+                <a href="../chaptertwo.html">
+            
+                    
+                    Chapter Two
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../part1/">
+            
+                <a href="../part1/">
+            
+                    
+                    Part One: Getting Started
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../part1/schema.html">
+            
+                <a href="../part1/schema.html">
+            
+                    
+                    Schema Design
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../part1/customresolvers.html">
+            
+                <a href="../part1/customresolvers.html">
+            
+                    
+                    Custom Resolvers
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../part1/restdatasource.html">
+            
+                <a href="../part1/restdatasource.html">
+            
+                    
+                    REST Datasource
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../part1/deepend.html">
+            
+                <a href="../part1/deepend.html">
+            
+                    
+                    Deep End
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.5" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Tutorial
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Tutorial</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="pygraph-tutorial">Pygraph Tutorial</h1>
+<p>Everyone likes examples. In this tutorial we will go through a real world
+example of converting an existing Django web site to one using pygraph.
+Green field tutorials always look great on paper. But how often do you
+ever get a chance to do that? If you are like me you have to work within the
+system you have in order to make any changes. No manager is willing to let
+you code for 6 months while change requests pile up for your existing site.</p>
+<p>We are going to take a pragmatic approach to introducing graphql in your
+application. With a little bit of work you can hopefully introduce this into
+your environment and no one will even notice. Except you will be happy again
+because your site will be easier to reason about. Your logic will live on
+the server again and you will no longer be slave to NPM and caring about
+things like what browsers support various ES6 rules.</p>
+<p>Even if you <em>do</em> like Javascript, you will appreciate it becoming easier to
+maintain. We hope you will learn something and will get more things done
+faster with less headaches.</p>
+<h2 id="re-engineering-effort">Re-engineering Effort</h2>
+<p>(Shameless plug) <a href="http://julython.org" target="_blank">Julython</a> is a community that gets
+together in july to work on opensource projects. It has not received a lot on
+attention in the past few years (volunteer time is hard to prioritize). The
+site it self is pretty simple but it does interact with the github api and uses
+websockets to show progress in real time.</p>
+<p>While the site is dormant for 11 months of the year, we can still pretend that
+it is under heavy usage and we will introduce our changes incrementally so
+we do not have any down time. We need to increase our engagement and provide
+a new framework to build on.</p>
+<p>Hopefully we can leave the site better than when it started.</p>
+<h2 id="lay-of-the-land">Lay of the Land</h2>
+<p>First lets have a look at the current state of affairs. Here are the current
+list of dependencies and versions we have to work with. It is not pretty and
+it is fairly out of date. Attempting to update any single piece of this puzzle
+is hard because we haven&apos;t been keeping up with these libraries. Since we
+have a ton of dependencies that depend on others.</p>
+<ul>
+<li>Server<ul>
+<li>Nginx 1.5</li>
+<li>Nginx push stream module (websockets) 1.4</li>
+<li>Ubuntu 14.04</li>
+<li>gunicorn 1.4</li>
+<li>Python 2.7.11</li>
+</ul>
+</li>
+<li>Python Application<ul>
+<li>Django==1.6.1</li>
+<li>django-tastypie==0.9.15</li>
+<li>Fabric==1.5.1</li>
+<li>django-social-auth==0.7.28</li>
+<li>iso8601==0.1.4</li>
+<li>django-debug-toolbar==1.3</li>
+<li>requests</li>
+<li>South</li>
+<li>mock</li>
+<li>jsonfield&gt;=0.9.20</li>
+<li>pytz</li>
+<li>pep8</li>
+<li>markdown</li>
+</ul>
+</li>
+<li>Client Side<ul>
+<li>backbone.js</li>
+<li>d3-3.2.0.js</li>
+<li>jquery-1.7.2.js</li>
+<li>jquery.timeago-1.3.0.js</li>
+<li>knockback-0.16.7.js</li>
+<li>knockout-2.2.0.js</li>
+<li>pushstream.js</li>
+<li>underscore-1.4.1.js</li>
+</ul>
+</li>
+</ul>
+<p>So I&apos;m not going to bore you with the nitty gritty details... but I&apos;ll update
+all the things I can and then report back. You should do the same with your
+site, be sure to update your dependencies (I&apos;ll wait)</p>
+<p>All done? good that was easy j/k</p>
+<p>For pygraph to work and the smoothest transition you should be on at least
+Python 3.6. That might not be as easy as it sounds. So I&apos;m willing to let
+you punt and bring this up as a different service if you need to. Micro-services
+for the win! Whether you wish to keep a monolithic application or not is out
+of the scope of this tutorial.</p>
+<p>I am unable to update to python 3.6 at this time. So we are going to have to
+get creative. We can still use graphql but we can&apos;t use pygraph &apos;just yet&apos;.
+Since everyone should be using graphql (cause it is the bees knees) I&apos;m first
+going to build with the tools I have. Then once we have refactored out a few
+things we can safely update our site to use 3.6+ and drop all the old
+dependencies.</p>
+<h2 id="where-to-begin-the-hard-way">Where to Begin? The Hard Way</h2>
+<p>Okay so we can&apos;t use pygraph yet, do you need pygraph at all? How can we do
+this without a fancy framework.</p>
+<p>I randomly selected the leader board page as a starting page. It is a page
+that lists the top 20 people, teams and locations for the current game.</p>
+<p>Here is the schema for the existing database tables:</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;people_commit&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;user_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;july_user&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-string">&quot;hash&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">UNIQUE</span>,
+    <span class="hljs-string">&quot;author&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;name&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;email&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;message&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">2024</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;url&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">512</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;project_id&quot;</span> <span class="hljs-built_in">integer</span>,
+    <span class="hljs-string">&quot;timestamp&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;created_on&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;files&quot;</span> <span class="hljs-built_in">text</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;people_project&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;url&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;description&quot;</span> <span class="hljs-built_in">text</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;name&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;forked&quot;</span> bool <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;forks&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;watchers&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;parent_url&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;created_on&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;updated_on&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;slug&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">50</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;service&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">30</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;repo_id&quot;</span> <span class="hljs-built_in">integer</span>,
+    <span class="hljs-string">&quot;active&quot;</span> bool <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;people_location&quot;</span> (
+    <span class="hljs-string">&quot;slug&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">50</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;name&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">64</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;total&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;approved&quot;</span> bool <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;people_team&quot;</span> (
+    <span class="hljs-string">&quot;slug&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">50</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;name&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">64</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;total&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;approved&quot;</span> bool <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;people_language&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;name&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">64</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;people_userbadge&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;user_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;july_user&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-string">&quot;badges&quot;</span> <span class="hljs-built_in">text</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;game_game&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;start&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;end&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;commit_points&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;project_points&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;problem_points&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;game_player_boards&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;player_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;board_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-keyword">UNIQUE</span> (<span class="hljs-string">&quot;player_id&quot;</span>, <span class="hljs-string">&quot;board_id&quot;</span>)
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;game_player&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;game_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;game_game&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-string">&quot;user_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;july_user&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-string">&quot;points&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;game_board&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;game_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;game_game&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-string">&quot;points&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;project_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;people_project&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>)
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;game_languageboard&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;game_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;game_game&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-string">&quot;points&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;language_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;people_language&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>)
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;july_user_projects&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;user_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;project_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;people_project&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-keyword">UNIQUE</span> (<span class="hljs-string">&quot;user_id&quot;</span>, <span class="hljs-string">&quot;project_id&quot;</span>)
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;july_user_groups&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;user_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;group_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;auth_group&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-keyword">UNIQUE</span> (<span class="hljs-string">&quot;user_id&quot;</span>, <span class="hljs-string">&quot;group_id&quot;</span>)
+)
+;
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;july_user_user_permissions&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;user_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;permission_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;auth_permission&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-keyword">UNIQUE</span> (<span class="hljs-string">&quot;user_id&quot;</span>, <span class="hljs-string">&quot;permission_id&quot;</span>)
+)
+;
+</code></pre>
+<p>Or at least that is most of the schema, you don&apos;t need to read it closely but
+we will use that as a guide for our graphql types.</p>
+<h2 id="installation">Installation</h2>
+<p>First we need to get the graphql core library installed, as this is the only
+prereq that we have:</p>
+<pre><code class="lang-bash">$ pip install graphql-core
+</code></pre>
+<p>Once you have that installed we can start adding this to our Django views.</p>
+<h2 id="our-first-schema">Our First Schema</h2>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="../part1/deepend.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: Deep End">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Tutorial","level":"1.5","depth":1,"previous":{"title":"Deep End","level":"1.4.4","depth":2,"path":"part1/deepend.md","ref":"part1/deepend.md","articles":[]},"dir":"ltr"},"config":{"plugins":[],"root":"./_source","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"gitbook":"*"},"file":{"path":"tutorial/README.md","mtime":"2018-11-08T02:30:19.059Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-08T02:37:30.981Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

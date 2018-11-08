@@ -9,3 +9,4 @@
   * [Custom Resolvers](part1/customresolvers.md)
   * [REST Datasource](part1/restdatasource.md)
   * [Deep End](part1/deepend.md)
+* [Tutorial](tutorial/README.md)
