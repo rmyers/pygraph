@@ -1,0 +1,11 @@
+
+
+type CommitCalendar {
+    start: String!
+    end: String!
+    commits: [Commit]
+}
+
+extend type Query {
+    getCommitCalendar(username: String): CommitCalendar
+}

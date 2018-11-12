@@ -1,0 +1,7 @@
+
+type Commit {
+    hash: String!
+    message: String
+    author: String
+    timestamp: String
+}
