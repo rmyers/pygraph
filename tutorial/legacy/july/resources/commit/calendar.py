@@ -21,9 +21,10 @@ class CommitCalendar:
     def commits(self):
         # None -> [Commit]
         # Allow for lazy loading
-        calendar = Commit.calendar(game=self.game, **self.filters)
-        return calendar['objects']
+        print('I am in commits')
+        return Commit.calendar(game=self.game, **self.filters)
 
 
 def getCommitCalendar(source, info, username=None):
+    """Returns a calender of commits for the game."""
     return CommitCalendar(username=username)

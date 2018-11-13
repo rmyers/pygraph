@@ -3,6 +3,7 @@ import json
 from graphql import (
     extend_schema,
     parse,
+    build_ast_schema,
     graphql,
     get_default_backend,
 )
@@ -12,6 +13,18 @@ from graphql.type import (
     GraphQLSchema,
     GraphQLString,
 )
+from graphql.utils.schema_printer import print_schema
+
+ROOT_QUERY = """
+type Query {
+  # An empty query so we can extend it later
+  _empty: String
+}
+
+schema {
+  query: Query
+}
+"""
 
 # This is an extended query which you would provide for a custom type.
 # By extending the types you can spread the schema across multiple files
@@ -44,9 +57,19 @@ root_schema = GraphQLSchema(
     query=root_query
 )
 
-extended_schema = extend_schema(root_schema, parse(EXTENDED))  # repeat as needed
+
+extenders = extend_schema(root_schema, parse(EXTENDED))
+
+extended_schema = build_ast_schema(parse(print_schema(extenders)))  # repeat as needed
 
 print(dir(extended_schema))
+print(extended_schema.get_type_map())
+
+print(dir(extended_schema.get_type('Query')))
+query = extended_schema.get_type('Query')
+for field, obj in query.fields.items():
+    print(obj.resolver)
+    print(dir(obj))
 
 sample_query = """{
   getCommitCalendar(username: "frank") {
@@ -69,16 +92,30 @@ def hello(source, info, username):
 registry = {
   'Query': {
     'getCommitCalendar': hello,
-  },
-  'User': {
-    'last': lambda _source, _info, **kwargs: 'smith'
   }
 }
+
+# wrap our registered thingy
+for _type, resolvers in registry.iteritems():
+    type_obj = extended_schema.get_type(_type)
+    if type_obj is None:
+        continue
+    for field_name, resolve_func in resolvers.iteritems():
+        field = type_obj.fields.get(field_name)
+        if field is None:
+            continue
+        field.resolver = resolve_func
+
 
 def resolver(resource, info, *args, **kwargs):
     type_name = info.parent_type.name  # GQL schema type (ie Query, User)
     field_name = info.field_name  # The attribute being resolved (ie name, last)
-    print(info.operation.directives)
+    # print('IN RESOLVER')
+    # print(type_name)
+    # print(field_name)
+    # print(resource)
+    # print(info)
+    # print('END RESOLVER')
     try:
         # First check if there is a customer resolver in the registry
         # (ie Query:hello, User:last)
@@ -94,16 +131,58 @@ def resolver(resource, info, *args, **kwargs):
 
 def reversed_middleware(next, *args, **kwargs):
     # type: (Callable, *Any, **Any) -> Promise
-    return resolver(*args, **kwargs)
+    # r = resolver(*args, **kwargs)
+    # if r is not None:
+    #     return r
+    # return next(*args, **kwargs)
+    p = next(*args, **kwargs)
+    # print(dir(p))
+    return p.then(resolver(*args, **kwargs))
 
 
-backend = get_default_backend()
+def get_graphql_params(request, data):
+    query = request.GET.get("query") or data.get("query")
+    variables = request.GET.get("variables") or data.get("variables")
 
-results = graphql(
-    extended_schema,
-    {u'query': u'{getCommitCalendar(username: "rmyers") { start end }}', u'variables': {}, u'operationName': None}['query'],
-    middleware=[reversed_middleware],
-)
+    operation_name = request.GET.get("operationName") or data.get("operationName")
+    if operation_name == "null":
+        operation_name = None
+
+    return query, variables, operation_name
+
+
+def execute_graphql_request(request, data, query, variables, operation_name):
+    backend = get_default_backend()
+    try:
+        document = backend.document_from_string(extended_schema, query)
+    except Exception:
+        raise
+
+    try:
+        return document.execute(
+            root=None,
+            variables=variables,
+            operation_name=operation_name,
+            context=request,
+            # middleware=[reversed_middleware]
+        )
+    except Exception:
+        raise
+
+
+class FakeRequest:
+    GET = {}
+    session = {}
+
+
+def doo_it():
+    request = FakeRequest()
+    data = {u'query': u'{getCommitCalendar(username: "rmyers") { start end commits { hash }}}', u'variables': {}, u'operationName': None}
+    query, variables, operation_name = get_graphql_params(request, data)
+    return execute_graphql_request(request, data, query, variables, operation_name)
+
+
+results = doo_it()
 
 print(dir(results))
 print(results.data)

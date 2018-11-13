@@ -1,6 +1,6 @@
 import os
 
-from graphql import build_ast_schema, extend_schema, parse
+from graphql import build_ast_schema, extend_schema, parse, print_schema
 from graphql.type import (
     GraphQLArgument,
     GraphQLEnumType,
@@ -43,5 +43,8 @@ for filename in schema_files:
         root_schema = extend_schema(root_schema, parse(schema_data))
 
 
-# Just expose it as schema so we don't need to remember what we called it.
-schema = root_schema
+# Since extend_schema parses client schema you'll get an error if you attempt
+# to execute it: 'Client Schema cannot be used for execution.'
+# Printing out the full schema and then parsing it avoids this issue.
+fully_extended_schema_sdl = print_schema(root_schema)
+schema = build_ast_schema(parse(fully_extended_schema_sdl))

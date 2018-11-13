@@ -4,46 +4,51 @@ from django import http
 from django.middleware.csrf import get_token
 from django.shortcuts import render_to_response
 from django.template import Context
-from graphql import (
-    extend_schema,
-    parse,
-    graphql,
-    get_default_backend,
-)
+from graphql import get_default_backend
 
-from resolver import legacy_middleware
+from resolver import resource_registry
 from schema import schema
 
-from resources.commit import calendar
+
+def get_graphql_params(request, data):
+    query = request.GET.get("query") or data.get("query")
+    variables = request.GET.get("variables") or data.get("variables")
+
+    operation_name = request.GET.get("operationName") or data.get("operationName")
+    if operation_name == "null":
+        operation_name = None
+
+    return query, variables, operation_name
 
 
-registry = {
-    "Query": {
-        "getCommitCalendar": calendar.getCommitCalendar,
-    }
-}
-
-
-def resolver(resource, info, *args, **kwargs):
-    type_name = info.parent_type.name  # GQL schema type (ie Query, User)
-    field_name = info.field_name  # The attribute being resolved (ie name, last)
-    print(info.operation.directives)
+def execute_graphql_request(request, data, query, variables, operation_name):
+    backend = get_default_backend()
     try:
-        # First check if there is a customer resolver in the registry
-        # (ie Query:hello, User:last)
-        custom_resolver = registry[type_name][field_name]
-        return custom_resolver(resource, info, **kwargs)
-    except KeyError:
-        # If there is not a custom resolver check the resource for attributes
-        # that match the field_name. The resource argument will be the result
-        # of the Query type resolution. In our example that is the result of
-        # the `hello` function which is an instance of the User class.
-        return getattr(resource, field_name, None)
+        document = backend.document_from_string(schema, query)
+    except Exception:
+        raise
+
+    try:
+        return document.execute(
+            root=None,
+            variables=variables,
+            operation_name=operation_name,
+            context=request,
+        )
+    except Exception:
+        raise
 
 
-def middlewar(next, *args, **kwargs):
-    # type: (Callable, *Any, **Any) -> Promise
-    return resolver(*args, **kwargs)
+for _type, resolvers in resource_registry.iteritems():
+    type_obj = schema.get_type(_type)
+    if type_obj is None:
+        continue
+    for field_name, resolve_func in resolvers.iteritems():
+        field = type_obj.fields.get(field_name)
+        if field is None:
+            continue
+        field.resolver = resolve_func
+        field.description = resolve_func.__doc__
 
 
 def graph(request):
@@ -62,20 +67,16 @@ def graph(request):
         content_type = request.META.get('CONTENT_TYPE')
         if content_type == "application/graphql":
             print('app/gql')
-            query = {"query": request.body.decode()}
+            data = {"query": request.body.decode()}
         elif content_type == "application/json":
             print('app/json')
-            query = json.loads(request.body.decode("utf-8"))
+            data = json.loads(request.body.decode("utf-8"))
         else:
             return http.HttpResponseBadRequest()
 
         # execute the query against our schema and resolvers
-        print(query)
-        results = graphql(
-            schema=schema,
-            query=query,
-            middleware=[legacy_middleware],
-        )
+        query, variables, operation_name = get_graphql_params(request, data)
+        results = execute_graphql_request(request, data, query, variables, operation_name)
         content = json.dumps(results.to_dict())
         print(content)
         return http.HttpResponse(content, content_type='application/json')

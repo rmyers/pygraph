@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.db.models.aggregates import Count
 
 
 class Game(models.Model):
@@ -60,3 +61,9 @@ class Commit(models.Model):
 
     def __unicode__(self):
         return u'Commit: %s' % self.hash
+
+    @classmethod
+    def calendar(cls, game=None, **kwargs):
+        game = game or Game.active_or_latest()
+        return cls.objects.filter(
+            timestamp__range=(game.start, game.end), **kwargs)

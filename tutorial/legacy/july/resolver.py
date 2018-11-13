@@ -13,6 +13,12 @@ def resolver_func(resource, info, **kwargs):
     global resource_registry
     type_name = info.parent_type.name  # GQL schema type (ie Query, User)
     field_name = info.field_name  # The attribute being resolved (ie name, last)
+    print('IN RESOLVER')
+    print(type_name)
+    print(field_name)
+    print(resource)
+    print(info)
+    print('END RESOLVER')
     try:
         # First check if there is a customer resolver in the resource_registry
         # (ie Query:hello, User:last)
@@ -29,4 +35,14 @@ def resolver_func(resource, info, **kwargs):
 def legacy_middleware(next, *args, **kwargs):
     # We need to handle the old interface to graphql resolution. In the
     # graphql-core-next version we can directly specify the resolver function.
-    return resolver_func(*args, **kwargs)
+    try:
+        p = next(*args, **kwargs)
+        print('I got here')
+        return p.then(resolver_func(*args, **kwargs))
+    except Exception:
+        print('RESOLVER Exception!')
+        return resolver_func(*args, **kwargs)
+    # r = resolver_func(*args, **kwargs)
+    # if r is not None:
+    #     return r
+    # return next(*args, **kwargs)
