@@ -82,3 +82,7 @@ def graph(request):
         return http.HttpResponse(content, content_type='application/json')
 
     raise http.HttpResponseNotAllowed()
+
+
+def frontend(request):
+    return render_to_response('frontend.html')

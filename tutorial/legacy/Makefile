@@ -2,7 +2,8 @@ ARCH                     := $(shell uname -s)
 REQUIREMENTS             := $(shell cat requirements*)
 SHELL                    := /bin/bash
 VIRTUAL_ENV              := .venv
-VIRTUALENV_COMMAND 		 := $(shell which virtualenv)
+VIRTUALENV_COMMAND 		   := $(shell which virtualenv)
+JAVASCRIPTS							 := $(shell find july -name '*.js')
 
 # Generate the MD5SUM of the requirements files.
 # Mac and Linx have slightly different md5 commands, hense the ARCH check.
@@ -36,10 +37,10 @@ endif
 example.db:
 	$(VIRTUAL_ENV)/bin/python manage.py syncdb
 
-static:
-	$(VIRTUAL_ENV)/bin/python manage.py collectstatic
+static_root: $(JAVASCRIPTS)
+	$(VIRTUAL_ENV)/bin/python manage.py collectstatic --noinput
 
-setup: prereqs venv example.db static ## Setup local environment
+setup: prereqs venv example.db static_root ## Setup local environment
 
 run: setup ## Run the development server locally
 	$(VIRTUAL_ENV)/bin/python manage.py runserver
