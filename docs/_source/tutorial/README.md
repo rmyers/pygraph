@@ -927,20 +927,38 @@ state and no 'built-in' way to separate to modules.
 What does your average web component look like, well here is a nice example:
 
 ```javascript
-import {LitElement, html} from 'https://unpkg.com/@polymer/lit-element?module';
+import {LitElement, html} from 'https://unpkg.com/@polymer/lit-element@0.6.3/lit-element.js?module';
 
 class MyElement extends LitElement {
+
   static get properties() {
     return {
-      mood: {type: String}
-    }
+      whales: { type: Number}
+    };
   }
-  render() {
-    return html`<style> .mood { color: green; } </style>
-      Web Components are <span class="mood">${this.mood}</span>!`;
-  }
-}
 
+  clickHandler() {
+    this.whales++;
+  }
+
+  // Render method should return a `TemplateResult` using the provided lit-html `html` tag function
+  render() {
+    return html`
+      <style>
+        :host {
+          display: block;
+        }
+        :host([hidden]) {
+          display: none;
+        }
+      </style>
+      <div>Whales: ${'🐳'.repeat(this.whales)}</div>
+      <button @click="${(event) => this.clickHandler(event)}">Click Me to Whale it Up!</button>
+      <slot></slot>
+    `;
+  }
+
+}
 customElements.define('my-element', MyElement);
 ```
 
@@ -961,7 +979,7 @@ Lets examine this method a little closer:
 ```javascript
 static get properties() {
   return {
-    mood: {type: String}
+    whales: {type: Number}
   }
 }
 ```
@@ -980,3 +998,9 @@ How do we do that?
 
 Well if you use a third party tool like launchdarky you are set and you know
 all about features. If not you could try [features](linktoit)
+
+<script type="module" src="../js/webComponents.js"></script>
+
+<my-element whales="5" />
+
+<h2 id="what-now">What ever should we do now?</h2>
