@@ -255,7 +255,7 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="pygraph-tutorial">Pygraph Tutorial</h1>
+                                <h1 id="pygraph-tutorial-brainiac">Pygraph Tutorial brainiac</h1>
 <p>Everyone likes examples. In this tutorial we will go through a real world
 example of converting an existing Django web site to one using pygraph.
 Green field tutorials always look great on paper. But how often do you
@@ -470,8 +470,667 @@ prereq that we have:</p>
 <pre><code class="lang-bash">$ pip install graphql-core
 </code></pre>
 <p>Once you have that installed we can start adding this to our Django views.</p>
-<h2 id="our-first-schema">Our First Schema</h2>
+<h2 id="first-query-to-migrate">First Query to Migrate</h2>
+<p>So we have a large application and it is not entirely clear where to start.
+One thing I suggest is to see where you are using non-standard api calls or
+api calls that combine multiple resources.</p>
+<p>There are a few candidates for our demo site, I randomly choose to migrate the
+commit calendar code to using graphql. First lets look at the existing code.</p>
+<p>Currently the commit calendar is a custom query that counts the commits for
+each day and returns start, end, and list of commit objects:</p>
+<pre><code class="lang-python"><span class="hljs-meta">    @classmethod</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">calendar</span><span class="hljs-params">(cls, game, **kwargs)</span>:</span>
+        <span class="hljs-string">&quot;&quot;&quot;
+        Returns number of commits per day for a date range.
+        &quot;&quot;&quot;</span>
+        count = cls.objects.filter(
+            timestamp__range=(game.start, game.end), **kwargs) \
+            .extra(select={<span class="hljs-string">&apos;timestamp&apos;</span>: <span class="hljs-string">&apos;date(timestamp)&apos;</span>}) \
+            .values(<span class="hljs-string">&apos;timestamp&apos;</span>).annotate(commit_count=Count(<span class="hljs-string">&apos;id&apos;</span>))
+        resp = {
+            <span class="hljs-string">&apos;start&apos;</span>: game.start.date(),
+            <span class="hljs-string">&apos;end&apos;</span>: game.end.date(),
+            <span class="hljs-string">&apos;objects&apos;</span>: list(count)
+        }
+        <span class="hljs-keyword">return</span> resp
+</code></pre>
+<p>That is exposed as a non-standard api endpoint (the application is using
+tastypie for api now) it looks like this:</p>
+<pre><code class="lang-python"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CommitResource</span><span class="hljs-params">(CORSResource)</span>:</span>
+    user = fields.ForeignKey(UserResource, <span class="hljs-string">&apos;user&apos;</span>, blank=<span class="hljs-keyword">True</span>, null=<span class="hljs-keyword">True</span>)
+    project = fields.ForeignKey(ProjectResource, <span class="hljs-string">&apos;project&apos;</span>,
+                                blank=<span class="hljs-keyword">True</span>, null=<span class="hljs-keyword">True</span>)
 
+    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Meta</span>:</span>
+        queryset = Commit.objects.all().select_related(
+            <span class="hljs-string">&apos;user&apos;</span>, <span class="hljs-string">&apos;project&apos;</span>)
+        cache = SimpleCache(timeout=<span class="hljs-number">30</span>)
+        allowed_methods = [<span class="hljs-string">&apos;get&apos;</span>]
+        filtering = {
+            <span class="hljs-string">&apos;user&apos;</span>: ALL_WITH_RELATIONS,
+            <span class="hljs-string">&apos;project&apos;</span>: ALL_WITH_RELATIONS,
+            <span class="hljs-string">&apos;timestamp&apos;</span>: [<span class="hljs-string">&apos;exact&apos;</span>, <span class="hljs-string">&apos;range&apos;</span>, <span class="hljs-string">&apos;gt&apos;</span>, <span class="hljs-string">&apos;lt&apos;</span>],
+        }
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">prepend_urls</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-keyword">return</span> [
+            url(<span class="hljs-string">r&quot;^(?P&lt;resource_name&gt;%s)/calendar%s$&quot;</span> % (
+                self._meta.resource_name, trailing_slash()),
+                self.wrap_view(<span class="hljs-string">&apos;get_calendar&apos;</span>),
+                name=<span class="hljs-string">&quot;api_get_calendar&quot;</span>),
+        ]
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_calendar</span><span class="hljs-params">(self, request, **kwargs)</span>:</span>
+        self.method_check(request, allowed=[<span class="hljs-string">&apos;get&apos;</span>])
+        self.throttle_check(request)
+        filters = {}
+
+        game = Game.active_or_latest()
+        username = request.GET.get(<span class="hljs-string">&apos;username&apos;</span>)
+        <span class="hljs-keyword">if</span> username:
+            filters[<span class="hljs-string">&apos;user__username&apos;</span>] = username
+
+        <span class="hljs-comment"># user = kwargs.get(&apos;user&apos;, None)</span>
+        calendar = Commit.calendar(game=game, **filters)
+        <span class="hljs-keyword">return</span> self.create_response(request, calendar)
+</code></pre>
+<p>And for completeness here is the SQL for the commit table:</p>
+<pre><code class="lang-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> <span class="hljs-string">&quot;people_commit&quot;</span> (
+    <span class="hljs-string">&quot;id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> PRIMARY <span class="hljs-keyword">KEY</span>,
+    <span class="hljs-string">&quot;user_id&quot;</span> <span class="hljs-built_in">integer</span> <span class="hljs-keyword">REFERENCES</span> <span class="hljs-string">&quot;july_user&quot;</span> (<span class="hljs-string">&quot;id&quot;</span>),
+    <span class="hljs-string">&quot;hash&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span> <span class="hljs-keyword">UNIQUE</span>,
+    <span class="hljs-string">&quot;author&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;name&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;email&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">255</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;message&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">2024</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;url&quot;</span> <span class="hljs-built_in">varchar</span>(<span class="hljs-number">512</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;project_id&quot;</span> <span class="hljs-built_in">integer</span>,
+    <span class="hljs-string">&quot;timestamp&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;created_on&quot;</span> datetime <span class="hljs-keyword">NOT</span> <span class="hljs-literal">NULL</span>,
+    <span class="hljs-string">&quot;files&quot;</span> <span class="hljs-built_in">text</span>
+)
+</code></pre>
+<h3 id="write-the-schema">Write the Schema</h3>
+<p>First we will need to create a schema for Commit and Calendar so that we can
+accurately model what is going on. The original code and api sort of glosses
+over the fact that these are actually two different resources. It is the
+same database but it is a different view of the data :shrug:! We shall fix
+that now that we are refactoring things.</p>
+<p>Here is the <code>CommitCalendar</code> type:</p>
+<pre><code class="lang-graphql">type CommitCalendar {
+    start: String!
+    end: String!
+    commits: [Commit]
+}
+</code></pre>
+<p>And of course we then need a <code>Commit</code> type (for now just include the minimum):</p>
+<pre><code class="lang-graphql">type Commit {
+    hash: String!
+    message: String
+    author: String
+    timestamp: String
+}
+</code></pre>
+<p>And for the commit calendar we just need to expose a query to fetch it:</p>
+<pre><code class="lang-graphql">extend type Query {
+    getCommitCalendar(username: String) CommitCalendar
+}
+</code></pre>
+<p><strong>NOTE:</strong> We use camelcase here because this is meant to be used by Javascript
+          and this help signify that.</p>
+<h3 id="organization-for-those-who-like-that-sort-of-thing">Organization for Those Who Like That Sort of Thing</h3>
+<p>Where should we put all this stuff? It is really up to you how you want to
+organize your application. But I find it is best when you organize your SDL
+files by type, that is one major type per graphql file.</p>
+<p>Since this is a django project, I&apos;ll just create a new &apos;application&apos;:</p>
+<pre><code class="lang-bash">$ python manage.py startapp graph
+</code></pre>
+<p>We can have circular references in the SDL but if you extend any types those
+will need to be extended in order. So we&apos;ll just make sure we have a system
+that can handle this. The name of the files don&apos;t actually matter so I&apos;m going
+to suggest that you name them like <code>001_commit.graphql</code>. Then if you need
+to order them you can just increment the prefix accordingly. So now we have
+this structure:</p>
+<pre><code class="lang-gql">july/
+    /graph
+    /graph/gql/001_commit.graphql
+    /graph/gql/002_commit_calendar.graphql
+    /graph/schema.py
+    /graph/resolvers/commit/commit.py
+    /graph/resolvers/commit/calendar.py
+</code></pre>
+<p><strong>NOTE:</strong> If you are concerned about discovering your schema, don&apos;t because the
+          graphql playground does this very well as we will see later.</p>
+<p>Okay so to get the schema files in we need to walk the folder and extend the
+base schema. Here is what our schema file will look like:</p>
+<pre><code class="lang-python"><span class="hljs-keyword">import</span> os
+
+<span class="hljs-keyword">from</span> graphql <span class="hljs-keyword">import</span> build_schema, extend_schema, parse, graphql
+
+ROOT_QUERY = <span class="hljs-string">&quot;&quot;&quot;
+  type Query {
+    _empty: String
+  }
+&quot;&quot;&quot;</span>
+
+root_schema = build_schema(ROOT_QUERY)
+
+schema_files = os.listdir(<span class="hljs-string">&apos;gql&apos;</span>)
+schema_files.sort()
+
+<span class="hljs-keyword">for</span> filename <span class="hljs-keyword">in</span> schema_files:
+    <span class="hljs-keyword">with</span> open(os.path.join(<span class="hljs-string">&apos;gql&apos;</span>, filename)) <span class="hljs-keyword">as</span> schema_file:
+        schema_data = schema_file.read()
+        root_schema = extend_schema(root_schema, parse(schema_data))
+
+
+<span class="hljs-comment"># Just expose it as schema so we don&apos;t need to remember what we called it.</span>
+schema = root_schema
+</code></pre>
+<p>Which will parse all the files and extend the root schema. Now all we need
+is a base resolver function will will resolve all our custom resolvers and
+classes. Oh wait first we need to create those.</p>
+<h3 id="resolvers">Resolvers</h3>
+<p>A resolver is pretty simple it just has to adhere to the following spec:</p>
+<p><code>def resolver(resource: Any, info: Any, *args, **kwargs)</code></p>
+<ul>
+<li><code>resource</code>: Is the resource that was resolved, or None.</li>
+<li><code>info</code>: Is the shared context and the parser info.</li>
+<li><code>args</code>: Optional positional args that are passed to the Query or Mutation.</li>
+<li><code>kwargs</code>: Optional keyword args that are passed to the Query or Mutation.</li>
+</ul>
+<p>What we hope to acheive at the end of the day is a way to join our schema to
+reality. We do that in pygraph with decorators which make it easy for you to
+connect the pieces together. That is the glue that binds the disjoined world.
+While it is not always easy to see the big picture I hope that you are able to
+follow along and learn something.</p>
+<p>This tutorial is attempting to show you how it could be done without the
+framework. Then we will refactor the code base to use pygraph. To see how it
+can help you to organize your code and make it sing.</p>
+<p>Then to wrap it up we will sprinkle in a little web components action and you
+will be able to program on the web again. And you wont have to learn too much
+Javascript. And your code will live on the server again! Happy and caged safe
+from prying eyes and &apos;clients&apos;.</p>
+<p>Django ORM is good for pulling out the pieces that we need. I was temped at
+first to pull down some raw sql but it is close to what we need. So for the
+commit calendar we can just use the existing method and tie that to the
+schema. Pretty cool. But how?</p>
+<p>Well, all we need to do is to provider our own custom resolver to the excution
+of the Query or Mutation. Then as the graph is resolved it will call our
+function to &apos;resolve&apos; things duh!</p>
+<p>Here is our <code>resolver</code> function:</p>
+<pre><code class="lang-python">registry = {}
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">resolver</span><span class="hljs-params">(resource, info, **kwargs)</span>:</span>
+    <span class="hljs-keyword">global</span> registry
+    type_name = info.parent_type.name  <span class="hljs-comment"># GQL schema type (ie Query, User)</span>
+    field_name = info.field_name  <span class="hljs-comment"># The attribute being resolved (ie name, last)</span>
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-comment"># First check if there is a customer resolver in the registry</span>
+        <span class="hljs-comment"># (ie Query:hello, User:last)</span>
+        custom_resolver = registry[type_name][field_name]
+        <span class="hljs-keyword">return</span> custom_resolver(resource, info, **kwargs)
+    <span class="hljs-keyword">except</span> KeyError:
+        <span class="hljs-comment"># If there is not a custom resolver check the resource for attributes</span>
+        <span class="hljs-comment"># that match the field_name. The resource argument will be the result</span>
+        <span class="hljs-comment"># of the Query type resolution. In our example that is the result of</span>
+        <span class="hljs-comment"># the `hello` function which is an instance of the User class.</span>
+        <span class="hljs-keyword">return</span> getattr(resource, field_name, <span class="hljs-keyword">None</span>)
+</code></pre>
+<p>So now we just need to get things into that registry. The registry should be
+a set of factory functions or classes that have a <code>__call__</code> method. In
+pygraph you would use our decorators but here you can simply import the
+things you need and fill in the registry by hand.</p>
+<p>By manually populating this registry you also make it much easier to see where
+everything is defined. Like this:</p>
+<pre><code class="lang-python"><span class="hljs-keyword">from</span> resolvers.commit <span class="hljs-keyword">import</span> calendar
+
+registry = {
+    <span class="hljs-string">&apos;Query&apos;</span>: {
+        <span class="hljs-string">&apos;getCommitCalendar&apos;</span>: calendar.CommitCalendar,
+    }
+}
+</code></pre>
+<p>And that looks a little like this:</p>
+<pre><code class="lang-python">
+<span class="hljs-keyword">from</span> july.people.models <span class="hljs-keyword">import</span> Commit
+<span class="hljs-keyword">from</span> july.game.models <span class="hljs-keyword">import</span> Game
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CommitCalendar</span>:</span>
+    <span class="hljs-comment"># start: datetime</span>
+    <span class="hljs-comment"># end: datetime</span>
+    <span class="hljs-comment"># commits: [Commit]</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">__init__</span><span class="hljs-params">(self, username=None)</span>:</span>
+        <span class="hljs-comment"># <span class="hljs-doctag">TODO:</span> check info.context for the correct user permissions?</span>
+        self.game = Game.active_or_latest()
+        self.filters = {}
+        <span class="hljs-keyword">if</span> username <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-keyword">None</span>:
+            self.filters[<span class="hljs-string">&apos;user__username&apos;</span>] = username
+
+        self.start = game.start
+        self.end = game.end
+
+<span class="hljs-meta">    @property</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">commits</span><span class="hljs-params">(self)</span>:</span>
+        <span class="hljs-comment"># None -&gt; [Commit]</span>
+        <span class="hljs-comment"># Allow for lazy loading</span>
+        calendar = Commit.calendar(game=game, **filters)
+        <span class="hljs-keyword">return</span> calendar[<span class="hljs-string">&apos;objects&apos;</span>]
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">getCommitCalendar</span><span class="hljs-params">(source, info, username=None)</span>:</span>
+    <span class="hljs-keyword">return</span> CommitCalendar(username=username)
+</code></pre>
+<p>We might choose to just add some functions in the <code>july.people.models</code> module
+which might make sense as this is but here I&apos;m trying to make it nice and
+easy to find all the resolvers.</p>
+<p>What happens when you execute the Query&quot;</p>
+<pre><code class="lang-gql">query getCommitCalendar(username: $username) {
+    start
+    end
+    commits {
+        hash
+    }
+}
+</code></pre>
+<ol>
+<li>The middleware classes are called and we return our resolver function.</li>
+<li>The <code>resolver</code> function is called and the <code>info.parent_type.name = &apos;Query&apos;</code></li>
+<li>The <code>info.field_name</code> is set to <code>getCommitCalendar</code></li>
+<li>We look up in the registry for <code>registry[&apos;Query&apos;][&apos;getCommitCalender&apos;]</code></li>
+<li>We return the results of the call <code>getCommitCalender(resource, info, **kwargs)</code></li>
+<li>We get back an instance of the CommitCalendar class.</li>
+<li>The resolver is then called again for each of the three <code>start</code>, <code>end</code>, <code>commits</code></li>
+<li>For each call the <code>resource</code> argument is set to the CommitCalendar</li>
+<li>For each call the <code>info.parent_type.name = &apos;CommitCalendar&apos;</code></li>
+<li>And each call the <code>info.field_name</code> is either <code>start</code>, <code>end</code>, or <code>commits</code> but they are called in order</li>
+<li>Our resolver looks in the registry for <code>registry[&apos;CommitCalendar&apos;][info.field_name]</code></li>
+<li>If we find a custom resolver in the registry we return that call just like <code>resolver(resource, info, **kwargs)</code></li>
+<li>If there is no custom resolver we fall back to attribute lookups on the <code>resource</code> which is the CommitCalendar instance.</li>
+</ol>
+<p>As long as all the types match then are results are returned. If there is any
+errors in the processing we will return a None or a null in Javascript for that
+field.</p>
+<p>So now all we need to do is connect this to a view and we can start testing it
+out. Since by default all the queries are synchronous there is no reason not
+to return it in a normal Django view. In the future we will refactor this to
+use the new python async loop. But for now we will just create a simple
+view and response.</p>
+<h3 id="wire-this-baby-up-----boo">Wire this Baby Up  -- boo</h3>
+<p>We just need to connect the dots and serve the newly generated schema. To do
+that all we need is a new view and url which is easy enough. We&apos;ll add a route
+to our main <code>urls.py</code> like:</p>
+<p><code>url(r&apos;^api/v2/graphql$&apos;, &apos;july.graph.views.graph&apos;, name=&apos;graph&apos;),</code></p>
+<p>Now our <code>graph</code> view looks like this:</p>
+<pre><code class="lang-python"><span class="hljs-keyword">import</span> json
+
+<span class="hljs-keyword">from</span> django <span class="hljs-keyword">import</span> http
+<span class="hljs-keyword">from</span> django.middleware.csrf <span class="hljs-keyword">import</span> get_token
+<span class="hljs-keyword">from</span> django.shortcuts <span class="hljs-keyword">import</span> render_to_response
+<span class="hljs-keyword">from</span> django.template <span class="hljs-keyword">import</span> Context
+<span class="hljs-keyword">from</span> graphql <span class="hljs-keyword">import</span> get_default_backend
+
+<span class="hljs-keyword">from</span> resolver <span class="hljs-keyword">import</span> resource_registry
+<span class="hljs-keyword">from</span> schema <span class="hljs-keyword">import</span> schema
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">get_graphql_params</span><span class="hljs-params">(request, data)</span>:</span>
+    query = request.GET.get(<span class="hljs-string">&quot;query&quot;</span>) <span class="hljs-keyword">or</span> data.get(<span class="hljs-string">&quot;query&quot;</span>)
+    variables = request.GET.get(<span class="hljs-string">&quot;variables&quot;</span>) <span class="hljs-keyword">or</span> data.get(<span class="hljs-string">&quot;variables&quot;</span>)
+
+    operation_name = request.GET.get(<span class="hljs-string">&quot;operationName&quot;</span>) <span class="hljs-keyword">or</span> data.get(<span class="hljs-string">&quot;operationName&quot;</span>)
+    <span class="hljs-keyword">if</span> operation_name == <span class="hljs-string">&quot;null&quot;</span>:
+        operation_name = <span class="hljs-keyword">None</span>
+
+    <span class="hljs-keyword">return</span> query, variables, operation_name
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">execute_graphql_request</span><span class="hljs-params">(request, data, query, variables, operation_name)</span>:</span>
+    backend = get_default_backend()
+    <span class="hljs-keyword">try</span>:
+        document = backend.document_from_string(schema, query)
+    <span class="hljs-keyword">except</span> Exception:
+        <span class="hljs-keyword">raise</span>
+
+    <span class="hljs-keyword">try</span>:
+        <span class="hljs-keyword">return</span> document.execute(
+            root=<span class="hljs-keyword">None</span>,
+            variables=variables,
+            operation_name=operation_name,
+            context=request,
+        )
+    <span class="hljs-keyword">except</span> Exception:
+        <span class="hljs-keyword">raise</span>
+
+
+<span class="hljs-keyword">for</span> _type, resolvers <span class="hljs-keyword">in</span> resource_registry.iteritems():
+    type_obj = schema.get_type(_type)
+    <span class="hljs-keyword">if</span> type_obj <span class="hljs-keyword">is</span> <span class="hljs-keyword">None</span>:
+        <span class="hljs-keyword">continue</span>
+    <span class="hljs-keyword">for</span> field_name, resolve_func <span class="hljs-keyword">in</span> resolvers.iteritems():
+        field = type_obj.fields.get(field_name)
+        <span class="hljs-keyword">if</span> field <span class="hljs-keyword">is</span> <span class="hljs-keyword">None</span>:
+            <span class="hljs-keyword">continue</span>
+        field.resolver = resolve_func
+        field.description = resolve_func.__doc__
+
+
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">graph</span><span class="hljs-params">(request)</span>:</span>
+    <span class="hljs-keyword">if</span> request.method == <span class="hljs-string">&apos;GET&apos;</span>:
+        <span class="hljs-comment"># All graphql requests are POST, so if it is a GET we can just</span>
+        <span class="hljs-comment"># render the graphql playground.</span>
+        ctx = Context({
+            <span class="hljs-comment"># Pass down the csrftoken to the playground so it can be set as</span>
+            <span class="hljs-comment"># the X-CSRFToken header during requests.</span>
+            <span class="hljs-string">&apos;csrftoken&apos;</span>: get_token(request),
+        })
+        <span class="hljs-keyword">return</span> render_to_response(<span class="hljs-string">&apos;playground.html&apos;</span>, context_instance=ctx)
+
+    <span class="hljs-keyword">elif</span> request.method == <span class="hljs-string">&apos;POST&apos;</span>:
+        <span class="hljs-comment"># Do the query and return results</span>
+        content_type = request.META.get(<span class="hljs-string">&apos;CONTENT_TYPE&apos;</span>)
+        <span class="hljs-keyword">if</span> content_type == <span class="hljs-string">&quot;application/graphql&quot;</span>:
+            print(<span class="hljs-string">&apos;app/gql&apos;</span>)
+            data = {<span class="hljs-string">&quot;query&quot;</span>: request.body.decode()}
+        <span class="hljs-keyword">elif</span> content_type == <span class="hljs-string">&quot;application/json&quot;</span>:
+            print(<span class="hljs-string">&apos;app/json&apos;</span>)
+            data = json.loads(request.body.decode(<span class="hljs-string">&quot;utf-8&quot;</span>))
+        <span class="hljs-keyword">else</span>:
+            <span class="hljs-keyword">return</span> http.HttpResponseBadRequest()
+
+        <span class="hljs-comment"># execute the query against our schema and resolvers</span>
+        query, variables, operation_name = get_graphql_params(request, data)
+        results = execute_graphql_request(request, data, query, variables, operation_name)
+        content = json.dumps(results.to_dict())
+        print(content)
+        <span class="hljs-keyword">return</span> http.HttpResponse(content, content_type=<span class="hljs-string">&apos;application/json&apos;</span>)
+
+    <span class="hljs-keyword">raise</span> http.HttpResponseNotAllowed()
+</code></pre>
+<p>Now you should be able to start up the development server and load the play
+ground up. You can then preform the <code>getCommitCalendar</code> query like:</p>
+<pre><code class="lang-gql">{
+    getCommitCalendar(username: &quot;frank&quot;) {
+        start
+        end
+        commits {
+            hash
+            author
+        }
+    }
+}
+</code></pre>
+<p><img src="../images/getCommitCalendar.png" alt="Our First Query"></p>
+<p>And you can view the schema by clicking on the tab on the right hand side:</p>
+<p><img src="../images/initialSchema.png" alt="First Schema"></p>
+<p>Ok, if you have gotten this far you might as well go the whole 9 yards baby.
+Besides teaching you how to graphql effectively, we also wish to make your
+future code portable.</p>
+<blockquote>
+<p>make your future code portable?</p>
+</blockquote>
+<p>What are you talking about mad man? Clearly you have fallen off the wagon.
+The best way to make your code portable is to remove all the dependencies.
+With Python that is truly easy to do. The language is fairly strong since it
+has batteries included for many things. I&apos;m not advocating not using <em>ANY</em>
+framework. But you should choose them wisely. Even picking something like
+<a href="http://docs.python-requests.org/en/master/" target="_blank">requests</a> seems harmless enough
+yet that it a fast moving library with many security fixes. Are you sure you
+are up to date or could you update it easily without breaking? :shrug: maybe,
+maybe not. Time will tell if you choose wisely or not. If you don&apos;t have too
+many different requests you actually need to make it is not <em>that</em> hard to
+do a couple &apos;by hand&apos; with the built-in httplib module. So why not give it a
+shot? If you are thinking about doing a command line tool or a script to run
+your integration tests. Make sure you keep that to python only. In fact break
+out a makefile and see if you can&apos;t do it in a couple lines of bash and make
+foo. Adding a command to the Makefile serves a dual purpose. Comments in code
+are basically useless when they go out of date or they are written in a language
+that you do not read. Americans are extremely lucky that english is the
+&apos;standard&apos; language that everyone uses. If it were not <em>WE WOULD BE SO SCREWED</em>
+because %50 of americans barely know how to speak a different language.</p>
+<p>The sooner you stop relying on comments in your code the better your programs
+will become. If you don&apos;t beleive me check this out. Here is a snippet of a
+makefile to run a task. If you know the rules to how a Makefile is written
+it will help to read the file.</p>
+<pre><code class="lang-makefile">SOIHSL ?= &apos;sldisl.ssiousl&apos;
+YOOUSH := <span class="hljs-variable">$(shell bash -c &apos;echo $$RANDOM&apos;)</span>
+
+<span class="hljs-section">lkjsys:</span>
+    python manage.py runserver --settings=$(SOIHSL)
+
+<span class="hljs-section">fiislws:</span>
+    python pytest --random=$(YOOUSH)
+
+<span class="hljs-section">skjsasuincbqy:</span>
+    find . -name &apos;*.pyc&apos; -delete
+    rm -rf dilwiicl
+    rm -rf kjlsls8l
+    rm -rf shwl
+</code></pre>
+<p>Now I wrote a little bit of gibberish but you can see by the way this is
+structured which command does what. It would help if you knew a little bit
+about Python, Django and pytest. But it is not totally nessesary. The point
+is since you can read the commands that are being run same as the ones you know
+you don&apos;t need to be able to read the variable names. You know the answer, AND
+it can be a guide for all the people you stumble opon your project from afar.
+They can instantly see how you are running your code locally. And they can even
+offer improvements now that they can see a little into how your project is
+structured.</p>
+<p>You can even see from the makefile where some temporary files are being removed
+you can safely ignore these directory and files. Because if someone would
+carelessly type that command <code>make skjsasuincbqy</code> they would delete those
+directories. It doesn&apos;t make <em>much</em> sense for the author to have that pointing
+at something they truely cared about. Unless they were just fucking with you
+of course. But I digress. Any way the fact still remains, you may not speak
+the same language as the other person but computers don&apos;t care either way.
+It is all just ones and zeros and they could give too shits less what we put in
+the comments. They only care about the code and so should you!</p>
+<p>If you code uses less third party tools then it will stand a better chance of
+servival. And take it from me I know what it means to write code that is out
+of date as soon as it goes live. Or to work for months on a project and see
+the company go a different direction. Too many times I have wasted effort in
+one way or another. But if you are on a project that does have a future, it
+most likely has a long past. And you are probably staring at that code right
+now. Look at how it taugnts you &apos;tastypie will live for ever!&apos;. No offense to
+the authors of <code>tastypie</code> but they way we had to integrate with it made it
+a big design desicion. Every third party tool you pull in is another design
+descision that you make. And if you rely on it it is hard to pull out of the
+package if it is not just quite what you needed.</p>
+<p>Here is a quick example of what I am talking about. Say you are learn&apos; away
+at your handy new best friend <code>franknbeans</code>. But there is a huge security hole
+in the way it was implemented (or something like that) which you are able to
+patch. So you add in a couple crazy hacks to make it right and call it a day.
+later the community or maybe even yourself comes up with a generic solution
+to the problem you were facing. So that tiny, but <em>huge</em> in size of pain change
+is now fixed for everyone of the project. WINNING!</p>
+<p>You are pretty awesome and you feel good too. You are most likely going to save
+the world 1 million hours of wasted time. However, time moves on... and...
+there comes a day when you say goodbye you your old friend <code>franknbeans</code> you
+have moved on and you brain is full of your new found love <code>beefnbeans</code> so in
+love that you forget about the huge bug you fixed in your code. Since it was
+so long ago and you refactored away the check on your side. You might not
+even have a test for it, or worse you have a test but it is pourly named so
+when the new library is introduced some random test start to fail and you
+wonder why until there is a light blub over your head. Then it all comes back
+to you and you save the day once again.</p>
+<p>Well if you like saving the day, and I sure you do. Why not just save yourself
+some trouble and see if you can&apos;t write a tool to do it yourself. If you did
+that then the security flaw or whatever could be in your code forever.
+Security flaw is not the right example for this. However the point is you
+loose knowledge of a tool as you move away from it. And the lesser the number
+of tools you depend on for a given project the better. Because it is easy to
+get lost. The documentation for certain projects is really good, however htat
+is not universal and you are usually left with reading the code.</p>
+<p>You should make your future code portable by including a Makefile for how to
+run it. The Makefile will servive a nuclear blast such as changing your project
+from a python based one to a golang based one. That file after the README is
+the most important file in the repository. It will tell everyone everything
+they need to know about your project. Or at least it should if you do it right.</p>
+<p>But this is not about Make this is about using universal tools that are portable
+and the new tool on the block is Graphql. And the only way to write portable
+code in this new future is to use the SDL. As any graphql engine must be able
+to parse this sdl or they can&apos;t actually call themselves an engine.</p>
+<p>By resisting the urge to pull in a package like graphene-django and start
+plugging in your models into it, you will be able to free yourself of your
+past problems. Your old models defined how you organized your code of the
+past and it ties the models to the database directly. You want to think about
+your data in the way that you are using it on the frontend in order to make
+your UI function better for your clients.</p>
+<p>How do you do that tho? The first way is to step back and look at how your site
+is laid out to begin with. Then see if there is any areas that need improvement.
+Your team or manager might be able to point you at a few things. The next
+step is to devise a plan to remedy that fault.</p>
+<p>Say you need to help customers that have to call in to fix a certain problem on
+the website. For example we notice that there are a number of people who start
+to fill out a form but then they stop for whatever reason and we can&apos;t figure
+out why. The team shouts at each other for a few days and they all coaeiless
+around three main ideas to solve the issue.</p>
+<p>Okay we need a way to solve this issue but we don&apos;t want to break everyone.
+We can do a little A/B testing and see which one is the winner. How can graphql
+fix this issue? Well I glad you asked. Because graphql in its very nature allows
+us to return a number of different possible queries. And make changing them a
+snap. Imagine if you had to write three different copies of the same code for
+a REST api. You could end up with a strange endpoint that was hard to document.
+However, with graphql you can easily support multiple iterations of the query
+that are slightly different but offer a different view of the data. Which is
+good for experiments and we can easily just add a new method for each new
+query we want to try. Then when the experiment is over we just remove the failed
+attempts and move on. The great thing about GraphQL is that you may not have
+to throw away much code at all. You could just be deleting the queries you use
+to make.</p>
+<p>There is also a way to organize your queries so that there are only a certain
+number of queries that you can make. Since there is a central handler you can
+easily change your system to record what things are actually being used to help
+you weed out the queries that you no longer need. Once you have a handle on
+which queries are the most used you can then track down some of the pain points
+in your code base. You can locate solutions to your bottlenecks and make
+everyone happy again.</p>
+<p>I think what I am trying to get at here is write your code so that it is easy
+to maintain.</p>
+<h3 id="going-to-the-client">Going to the client</h3>
+<p>Alright so far the tutorial has focused (well I tried to stay focused at least)
+on the server side. What of ever are we supposed to do for the client side.</p>
+<p>First if you are impaitent you can skip ahead and see the final application
+in the <a href="https://github.com/rmyers/pygraph/tree/master/tutorial/legacy" target="_blank">tutorial</a>.
+For the rest of you please bear with me as I rant about Javascipt.</p>
+<p>So the main issue I have with Javascript is the dependencies. NPM is a nightmare
+to look at. If you install the barebones &apos;starter&apos; project for a webpack enabled
+ReactJS website you could end up installing 800 individual projects in your
+node_modules folder. Now I like open source as much as the next guy. But I am
+truly skeptical of most things on the internet. You wouldn&apos;t click a suspisious
+link in an email would you? Why would you willingly download 800 zip/tar/gz
+files authored by who knows what?</p>
+<p>I don&apos;t trust just anyone to my server&apos;s data why would you pick that as a base?
+so stay away from all that shit.</p>
+<p>I am not saying that you should write your client side code in a different
+language. I&apos;m suggesting that you steer clear of babel and webpack until you
+know you <em>need</em> it to get your work done. But chances are you will not need
+to do anything that drastic. The world is getting better as the Javascript
+language is getting more powerful and the language is growing in core logic
+which is helpful to reduce the number of choises you need to make for a given
+technology. Browsers are starting to support more of the language itself and
+the days of transpiling to support old version of IE are comming to an end.</p>
+<p>You can now use a fancy new technology called web components to simply your
+client side application. Basically web components are a way to extent the
+elements (find a better term for this) that you can add to your html. Using
+web components with graphql is a match made in heaven. As you simplify your
+backend code to work with your front end code you can now simplify the
+front end. What do I mean by all this? Well I&apos;m talking about simplifing
+the code on the front end so that you have less dependencies on projects
+that may not be around next year. It is really hard to know when your npm stack
+is out of date. Unless you know just <em>EVERYTHING</em> about js and the different
+tools available. Who has time for any of that mess. You have better things to
+store in your brain. Like what the hell does <em>MY</em> code do? How can you focus on
+your code if you need to search google for every other line or call?</p>
+<p>So standard tools for the best results. If at worst you pull in babel, I&apos;m okay
+with this as it will hopefully be a thing of the past soon. Once the browsers
+get their shit together the JS landscape will be a better place. Sure there will
+be future improvements that will take time to propogate. But once there is a
+critical mass of funcionality you will not need to rely on transpiling your
+code to ES5. So while this isn&apos;t a tutorial on web components, I would be doing
+you a diservice if I didn&apos;t teach you it too.</p>
+<h3 id="web-components-wtf">WEB COMPONENTS WTF!!!!!!</h3>
+<p>Oh how I do love web components they are simply the bees knees. If I did not
+know anything about graphql or shutter if it didn&apos;t exist, my new besty would
+be web components. Because we can finally make javascript act like it is a true
+programming language with imports that work. I mean how long have we dragged
+our knuckles on the ground relying on the html to tell our JS where to load
+itself from? Imports are a basic part of every language. I can&apos;t believe that
+i have been programming on the web for 20 years now and global scope is still
+a thing. Most <em>real</em> languages have a way to namespace different modules to
+separate your code from different parts. But for like what seems like forever
+JavaScript has kept us in the dark ages with a <code>var</code> actually setting global
+state and no &apos;built-in&apos; way to separate to modules.</p>
+<p>What does your average web component look like, well here is a nice example:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> {LitElement, html} <span class="hljs-keyword">from</span> <span class="hljs-string">&apos;https://unpkg.com/@polymer/lit-element@0.6.3/lit-element.js?module&apos;</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">MyElement</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">LitElement</span> </span>{
+
+  <span class="hljs-keyword">static</span> get properties() {
+    <span class="hljs-keyword">return</span> {
+      whales: { type: <span class="hljs-built_in">Number</span>}
+    };
+  }
+
+  clickHandler() {
+    <span class="hljs-keyword">this</span>.whales++;
+  }
+
+  <span class="hljs-comment">// Render method should return a `TemplateResult` using the provided lit-html `html` tag function</span>
+  render() {
+    <span class="hljs-keyword">return</span> html<span class="hljs-string">`
+      &lt;style&gt;
+        :host {
+          display: block;
+        }
+        :host([hidden]) {
+          display: none;
+        }
+      &lt;/style&gt;
+      &lt;div&gt;Whales: <span class="hljs-subst">${&apos;&#x1F433;&apos;.repeat(this.whales)}</span>&lt;/div&gt;
+      &lt;button @click=&quot;<span class="hljs-subst">${(event) =&gt; this.clickHandler(event)}</span>&quot;&gt;Click Me to Whale it Up!&lt;/button&gt;
+      &lt;slot&gt;&lt;/slot&gt;
+    `</span>;
+  }
+
+}
+customElements.define(<span class="hljs-string">&apos;my-element&apos;</span>, MyElement);
+</code></pre>
+<p>What I like about this is it looks and feels a lot like React. Which is nice
+because React is popular for a reason. It is easy to use and it <em>makes</em> sense
+when you read it. It is a little complicated on how it works but the rules are
+easy to learn and follow. So if you need to get started it is not that hard
+to figure out what your previous developer was thinking.</p>
+<p>Now with graphql you can take that one step further by removing the need to
+do logic checking on the javascript side. You can instead focus on content
+presentation.</p>
+<blockquote>
+<p><em>WHICH IS WHAT HTML WAS DESIGNED FOR</em></p>
+</blockquote>
+<p>Lets examine this method a little closer:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">static</span> get properties() {
+  <span class="hljs-keyword">return</span> {
+    whales: {type: <span class="hljs-built_in">Number</span>}
+  }
+}
+</code></pre>
+<p>Without knowing anything about how web components work or how the base
+lit-element works you may guess what this does. And you might even be right
+I&apos;m not sure if I am correct about this or not. But we should replace this
+object that is returned with a query and execution from our graphql server
+and see if we can&apos;t wire this thing together.</p>
+<p>I love experiments so how can we do this without breaking everything?</p>
+<p>We can use a feature flag to determine whether to show this element or not.</p>
+<p>How do we do that?</p>
+<p>Well if you use a third party tool like launchdarky you are set and you know
+all about features. If not you could try <a href="linktoit">features</a></p>
+<script type="module" src="../js/webComponents.js"></script>
+
+<my-element whales="5">
+
+<h2 id="what-now">What ever should we do now?</h2>
+</my-element>
                                 
                                 </section>
                             
@@ -510,7 +1169,7 @@ prereq that we have:</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Tutorial","level":"1.5","depth":1,"previous":{"title":"Deep End","level":"1.4.4","depth":2,"path":"part1/deepend.md","ref":"part1/deepend.md","articles":[]},"dir":"ltr"},"config":{"plugins":[],"root":"./_source","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"gitbook":"*"},"file":{"path":"tutorial/README.md","mtime":"2018-11-08T02:30:19.059Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-08T02:37:30.981Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Tutorial","level":"1.5","depth":1,"previous":{"title":"Deep End","level":"1.4.4","depth":2,"path":"part1/deepend.md","ref":"part1/deepend.md","articles":[]},"dir":"ltr"},"config":{"plugins":[],"root":"./_source","styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"theme":"default","pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"variables":{},"gitbook":"*","frankly":"brainiac"},"file":{"path":"tutorial/README.md","mtime":"2018-11-14T05:34:31.786Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2018-11-25T16:06:38.861Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
